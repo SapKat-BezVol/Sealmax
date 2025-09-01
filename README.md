@@ -1,0 +1,2 @@
+# Sealmax
+Secure messenger
