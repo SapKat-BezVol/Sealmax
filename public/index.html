@@ -36,7 +36,7 @@
     }
     #sidebar {
       width: 200px;
-      background: #fff;
+      background: #fafafa;
       border-right: 1px solid #ddd;
       display: flex;
       flex-direction: column;
@@ -57,9 +57,19 @@
       padding: 10px;
       cursor: pointer;
       border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
     #contacts li.active {
       background: #e0f7fa;
+    }
+    .badge {
+      background: red;
+      color: #fff;
+      border-radius: 50%;
+      padding: 2px 6px;
+      font-size: 12px;
     }
     #chatArea {
       flex: 1;
@@ -81,12 +91,23 @@
       list-style: none;
       margin: 0;
       padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
     #messages li {
-      background: #fff;
-      margin-bottom: 10px;
+      max-width: 60%;
       padding: 8px 12px;
-      border-radius: 4px;
+      border-radius: 12px;
+      word-break: break-word;
+    }
+    #messages li.mine {
+      background: #dcf8c6;
+      align-self: flex-end;
+    }
+    #messages li.theirs {
+      background: #fff;
+      align-self: flex-start;
     }
     #form {
       display: flex;
@@ -121,6 +142,7 @@
   <div id="register" style="display:none;">
     <h2>Register</h2>
     <input id="regUser" placeholder="Username" />
+    <input id="regCustom" placeholder="Custom ID" />
     <input id="regPass" type="password" placeholder="Password" />
     <button id="regBtn">Create account</button>
     <button id="showLogin">Back</button>

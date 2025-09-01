@@ -13,6 +13,7 @@ const loginPass = document.getElementById('loginPass');
 const loginBtn = document.getElementById('loginBtn');
 const showRegister = document.getElementById('showRegister');
 const regUser = document.getElementById('regUser');
+const regCustom = document.getElementById('regCustom');
 const regPass = document.getElementById('regPass');
 const regBtn = document.getElementById('regBtn');
 const showLogin = document.getElementById('showLogin');
@@ -29,22 +30,32 @@ let socket;
 let me = null;
 let activeId = 0;
 const contacts = new Map();
+const unread = new Map();
 
 function renderContacts() {
   contactsUl.innerHTML = '';
   const general = { id: 0, username: 'General' };
   [general, ...contacts.values()].forEach(u => {
     const li = document.createElement('li');
-    li.textContent = u.username + (u.id ? ` (@${u.id})` : '');
     li.dataset.id = u.id;
     if (u.id === activeId) li.classList.add('active');
+    const name = document.createElement('span');
+    name.textContent = u.username + (u.customId ? ` (@${u.customId})` : '');
+    li.appendChild(name);
+    const count = unread.get(u.id);
+    if (count) {
+      const badge = document.createElement('span');
+      badge.className = 'badge';
+      badge.textContent = count;
+      li.appendChild(badge);
+    }
     li.onclick = () => selectContact(u.id);
     contactsUl.appendChild(li);
   });
 }
 
 async function loadContacts() {
-  const list = await api('/api/users');
+  const list = await api('/api/contacts');
   list.forEach(u => contacts.set(u.id, u));
   renderContacts();
 }
@@ -58,14 +69,20 @@ async function loadMessages(id) {
 
 function renderMessage(m) {
   const li = document.createElement('li');
-  const sender = m.senderId === me.id ? 'Me' : contacts.get(m.senderId)?.username || `@${m.senderId}`;
-  li.textContent = `${sender}: ${m.text}`;
+  li.className = m.senderId === me.id ? 'mine' : 'theirs';
+  let prefix = '';
+  if (m.recipientId === 0) {
+    const sender = m.senderId === me.id ? 'Me' : contacts.get(m.senderId)?.username || `@${m.senderId}`;
+    prefix = sender + ': ';
+  }
+  li.textContent = prefix + m.text;
   messagesUl.appendChild(li);
 }
 
 function selectContact(id) {
   activeId = id;
   chatWith.textContent = id === 0 ? 'General' : contacts.get(id)?.username || `@${id}`;
+  unread.set(id, 0);
   renderContacts();
   loadMessages(id);
 }
@@ -95,7 +112,7 @@ showLogin.onclick = () => {
 
 regBtn.onclick = async () => {
   try {
-    await api('/api/register', 'POST', { username: regUser.value, password: regPass.value });
+    await api('/api/register', 'POST', { username: regUser.value, password: regPass.value, customId: regCustom.value });
     registerBox.style.display = 'none';
     authBox.style.display = 'flex';
   } catch (e) {
@@ -133,9 +150,12 @@ function initSocket() {
     if (relevant) {
       renderMessage(msg);
       messagesUl.scrollTop = messagesUl.scrollHeight;
+    } else {
+      const otherId = msg.senderId === me.id ? msg.recipientId : msg.senderId;
+      unread.set(otherId, (unread.get(otherId) || 0) + 1);
+      renderContacts();
     }
     if (!contacts.has(msg.senderId) && msg.senderId !== me.id) {
-      // load new contact
       api(`/api/users/${msg.senderId}`).then(u => {
         contacts.set(u.id, u);
         renderContacts();
@@ -154,11 +174,11 @@ form.addEventListener('submit', e => {
 
 contactSearch.addEventListener('keydown', async e => {
   if (e.key === 'Enter') {
-    const id = parseInt(contactSearch.value.slice(1), 10);
+    const handle = contactSearch.value.slice(1).toLowerCase();
     contactSearch.value = '';
-    if (id && !contacts.has(id)) {
+    if (handle && ![...contacts.values()].some(u => u.customId === handle)) {
       try {
-        const u = await api(`/api/users/${id}`);
+        const u = await api(`/api/custom/${handle}`);
         contacts.set(u.id, u);
         renderContacts();
       } catch {}
