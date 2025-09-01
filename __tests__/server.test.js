@@ -14,6 +14,7 @@ test('serves index.html', async () => {
   const res = await request(server).get('/');
   expect(res.statusCode).toBe(200);
   expect(res.text).toContain('Sealmax Messenger');
+  expect(res.text).toContain('Change name');
 });
 
 test('socket.io chat', done => {
