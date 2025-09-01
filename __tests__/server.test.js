@@ -2,32 +2,38 @@ const request = require('supertest');
 const { io } = require('socket.io-client');
 const server = require('../server');
 
+let httpServer;
+
 beforeAll(done => {
-  server.listen(3000, done);
+  httpServer = server.listen(3000, done);
 });
 
 afterAll(done => {
-  server.close(done);
+  httpServer.close(done);
 });
 
-test('serves index.html', async () => {
-  const res = await request(server).get('/');
+test('serves login page', async () => {
+  const res = await request(httpServer).get('/');
   expect(res.statusCode).toBe(200);
-  expect(res.text).toContain('Sealmax Messenger');
-  expect(res.text).toContain('Change name');
+  expect(res.text).toContain('Sign in');
 });
 
-test('socket.io chat', done => {
-  const client = io('http://localhost:3000');
-  const message = { id: Date.now(), user: 'tester', text: 'hello' };
-
-  client.on('connect', () => {
-    client.emit('chat message', message);
-  });
-
-  client.on('chat message', msg => {
-    expect(msg).toEqual(message);
-    client.close();
-    done();
-  });
+test('register, login and chat', done => {
+  const agent = request.agent(httpServer);
+  agent
+    .post('/api/register')
+    .send({ username: 'u1', password: 'p1' })
+    .then(() => agent.post('/api/login').send({ username: 'u1', password: 'p1' }))
+    .then(res => {
+      const cookie = res.headers['set-cookie'][0];
+      const client = io('http://localhost:3000', { extraHeaders: { Cookie: cookie } });
+      client.on('chat history', () => {
+        client.emit('chat message', { recipientId: 0, text: 'hello' });
+      });
+      client.on('chat message', msg => {
+        expect(msg.text).toBe('hello');
+        client.close();
+        done();
+      });
+    });
 });
