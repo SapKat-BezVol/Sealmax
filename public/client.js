@@ -10,11 +10,13 @@ const authBox = document.getElementById('auth');
 const registerBox = document.getElementById('register');
 const loginUser = document.getElementById('loginUser');
 const loginPass = document.getElementById('loginPass');
+const loginError = document.getElementById('loginError');
 const loginBtn = document.getElementById('loginBtn');
 const showRegister = document.getElementById('showRegister');
 const regUser = document.getElementById('regUser');
 const regCustom = document.getElementById('regCustom');
 const regPass = document.getElementById('regPass');
+const regError = document.getElementById('regError');
 const regBtn = document.getElementById('regBtn');
 const showLogin = document.getElementById('showLogin');
 const app = document.getElementById('app');
@@ -88,6 +90,7 @@ function selectContact(id) {
 }
 
 loginBtn.onclick = async () => {
+  loginError.textContent = '';
   try {
     me = await api('/api/login', 'POST', { username: loginUser.value, password: loginPass.value });
     authBox.style.display = 'none';
@@ -96,27 +99,36 @@ loginBtn.onclick = async () => {
     initSocket();
     selectContact(0);
   } catch (e) {
-    alert('Login failed');
+    let msg;
+    try { msg = JSON.parse(e.message).error; } catch { msg = 'Login failed'; }
+    loginError.textContent = msg;
   }
 };
 
 showRegister.onclick = () => {
+  loginError.textContent = '';
+  regError.textContent = '';
   authBox.style.display = 'none';
   registerBox.style.display = 'flex';
 };
 
 showLogin.onclick = () => {
+  regError.textContent = '';
+  loginError.textContent = '';
   registerBox.style.display = 'none';
   authBox.style.display = 'flex';
 };
 
 regBtn.onclick = async () => {
+  regError.textContent = '';
   try {
     await api('/api/register', 'POST', { username: regUser.value, password: regPass.value, customId: regCustom.value });
     registerBox.style.display = 'none';
     authBox.style.display = 'flex';
   } catch (e) {
-    alert('Registration failed');
+    let msg;
+    try { msg = JSON.parse(e.message).error; } catch { msg = 'Registration failed'; }
+    regError.textContent = msg;
   }
 };
 
