@@ -34,6 +34,15 @@ let activeId = 0;
 const contacts = new Map();
 const unread = new Map();
 
+/* ——— UI helpers ——— */
+function setBusy(el, busy=true){
+  if (!el) return;
+  el.setAttribute('aria-busy', busy ? 'true' : 'false');
+  if ('disabled' in el) el.disabled = !!busy;
+}
+function clearAndFocus(el){ el.value=''; el.focus(); }
+
+/* ——— Рендер контактов ——— */
 function renderContacts() {
   contactsUl.innerHTML = '';
   const general = { id: 0, username: 'General' };
@@ -41,16 +50,20 @@ function renderContacts() {
     const li = document.createElement('li');
     li.dataset.id = u.id;
     if (u.id === activeId) li.classList.add('active');
+
     const name = document.createElement('span');
     name.textContent = u.username + (u.customId ? ` (@${u.customId})` : '');
     li.appendChild(name);
+
     const count = unread.get(u.id);
     if (count) {
       const badge = document.createElement('span');
       badge.className = 'badge';
       badge.textContent = count;
+      badge.setAttribute('aria-label', `Непрочитанных: ${count}`);
       li.appendChild(badge);
     }
+
     li.onclick = () => selectContact(u.id);
     contactsUl.appendChild(li);
   });
@@ -62,6 +75,7 @@ async function loadContacts() {
   renderContacts();
 }
 
+/* ——— Сообщения ——— */
 async function loadMessages(id) {
   messagesUl.innerHTML = '';
   const msgs = await api(`/api/messages/${id}`);
@@ -89,27 +103,42 @@ function selectContact(id) {
   loadMessages(id);
 }
 
+/* ——— Авторизация ——— */
 loginBtn.onclick = async () => {
   loginError.textContent = '';
+  setBusy(loginBtn, true);
+  authBox.setAttribute('aria-busy', 'true');
   try {
-    me = await api('/api/login', 'POST', { username: loginUser.value, password: loginPass.value });
+    me = await api('/api/login', 'POST', { username: loginUser.value.trim(), password: loginPass.value });
     authBox.style.display = 'none';
     app.style.display = 'flex';
     await loadContacts();
     initSocket();
     selectContact(0);
+    input.focus();
   } catch (e) {
     let msg;
-    try { msg = JSON.parse(e.message).error; } catch { msg = 'Login failed'; }
+    try { msg = JSON.parse(e.message).error; } catch { msg = 'Ошибка входа'; }
     loginError.textContent = msg;
+  } finally {
+    setBusy(loginBtn, false);
+    authBox.setAttribute('aria-busy', 'false');
   }
 };
+
+/* Enter для логина */
+[loginUser, loginPass].forEach(el => {
+  el.addEventListener('keydown', ev => {
+    if (ev.key === 'Enter') loginBtn.click();
+  });
+});
 
 showRegister.onclick = () => {
   loginError.textContent = '';
   regError.textContent = '';
   authBox.style.display = 'none';
   registerBox.style.display = 'flex';
+  setTimeout(() => regUser.focus(), 0);
 };
 
 showLogin.onclick = () => {
@@ -117,20 +146,34 @@ showLogin.onclick = () => {
   loginError.textContent = '';
   registerBox.style.display = 'none';
   authBox.style.display = 'flex';
+  setTimeout(() => loginUser.focus(), 0);
 };
 
 regBtn.onclick = async () => {
   regError.textContent = '';
+  setBusy(regBtn, true);
+  registerBox.setAttribute('aria-busy', 'true');
   try {
-    await api('/api/register', 'POST', { username: regUser.value, password: regPass.value, customId: regCustom.value });
+    await api('/api/register', 'POST', { username: regUser.value.trim(), password: regPass.value, customId: regCustom.value.trim() });
     registerBox.style.display = 'none';
     authBox.style.display = 'flex';
+    clearAndFocus(loginUser);
   } catch (e) {
     let msg;
-    try { msg = JSON.parse(e.message).error; } catch { msg = 'Registration failed'; }
+    try { msg = JSON.parse(e.message).error; } catch { msg = 'Ошибка регистрации'; }
     regError.textContent = msg;
+  } finally {
+    setBusy(regBtn, false);
+    registerBox.setAttribute('aria-busy', 'false');
   }
 };
+
+/* Enter для регистрации */
+[regUser, regCustom, regPass].forEach(el => {
+  el.addEventListener('keydown', ev => {
+    if (ev.key === 'Enter') regBtn.click();
+  });
+});
 
 async function init() {
   try {
@@ -142,10 +185,16 @@ async function init() {
       await loadContacts();
       initSocket();
       selectContact(0);
+      input.focus();
+    } else {
+      loginUser.focus();
     }
-  } catch {}
+  } catch {
+    loginUser.focus();
+  }
 }
 
+/* ——— Socket.io ——— */
 function initSocket() {
   socket = io();
   socket.on('chat history', msgs => {
@@ -176,24 +225,29 @@ function initSocket() {
   });
 }
 
+/* ——— Отправка сообщения ——— */
 form.addEventListener('submit', e => {
   e.preventDefault();
   const text = input.value.trim();
   if (!text) return;
   socket.emit('chat message', { recipientId: activeId, text });
   input.value = '';
+  input.focus();
 });
 
+/* Поиск по Enter: @handle */
 contactSearch.addEventListener('keydown', async e => {
   if (e.key === 'Enter') {
-    const handle = contactSearch.value.slice(1).toLowerCase();
+    const v = contactSearch.value.trim();
+    if (!v) return;
+    const handle = v.startsWith('@') ? v.slice(1).toLowerCase() : v.toLowerCase();
     contactSearch.value = '';
     if (handle && ![...contacts.values()].some(u => u.customId === handle)) {
       try {
         const u = await api(`/api/custom/${handle}`);
         contacts.set(u.id, u);
         renderContacts();
-      } catch {}
+      } catch {/* молча */}
     }
   }
 });
