@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <link rel="icon" href="logo.png">
   <link rel="stylesheet" href="style.css">
   <title>Sealmax Messenger</title>
   <script src="/socket.io/socket.io.js"></script>
@@ -9,6 +10,7 @@
 </head>
 <body>
   <div id="auth">
+    <img src="logo.png" alt="Sealmax logo" class="logo">
     <h2>Sign in</h2>
     <input id="loginUser" placeholder="Username" />
     <input id="loginPass" type="password" placeholder="Password" />
@@ -17,6 +19,7 @@
     <button id="showRegister">Register</button>
   </div>
   <div id="register" style="display:none;">
+    <img src="logo.png" alt="Sealmax logo" class="logo">
     <h2>Register</h2>
     <input id="regUser" placeholder="Username" />
     <input id="regCustom" placeholder="Custom ID" />
@@ -31,7 +34,13 @@
       <ul id="contacts"></ul>
     </div>
     <div id="chatArea">
-      <div id="chatHeader"><span id="chatWith">General</span><button id="logoutBtn">Logout</button></div>
+      <div id="chatHeader">
+        <div id="chatTitle">
+          <img src="logo.png" alt="Sealmax logo" class="logo small">
+          <span id="chatWith">General</span>
+        </div>
+        <button id="logoutBtn">Logout</button>
+      </div>
       <ul id="messages"></ul>
       <form id="form" autocomplete="off">
         <input id="input" placeholder="Type a message" />
