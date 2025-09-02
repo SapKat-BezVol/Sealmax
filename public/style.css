@@ -1,0 +1,132 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f4f9;
+}
+body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#auth, #register {
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 300px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+#app {
+  flex: 1;
+  display: none;
+  flex-direction: row;
+  height: 100%;
+}
+#sidebar {
+  width: 200px;
+  background: #fafafa;
+  border-right: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+}
+#contactSearch {
+  padding: 10px;
+  border: none;
+  border-bottom: 1px solid #ddd;
+}
+#contacts {
+  flex: 1;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+#contacts li {
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+#contacts li.active {
+  background: #e0f7fa;
+}
+.badge {
+  background: red;
+  color: #fff;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 12px;
+}
+#chatArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+#chatHeader {
+  padding: 10px;
+  background: #4a90e2;
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+#messages {
+  flex: 1;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+#messages li {
+  max-width: 60%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  word-break: break-word;
+}
+#messages li.mine {
+  background: #dcf8c6;
+  align-self: flex-end;
+}
+#messages li.theirs {
+  background: #fff;
+  align-self: flex-start;
+}
+#form {
+  display: flex;
+  padding: 10px;
+  background: #eee;
+}
+#form input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+#form button {
+  margin-left: 10px;
+  padding: 10px 20px;
+  border: none;
+  background: #4a90e2;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.error {
+  color: #e53935;
+  text-align: center;
+  font-size: 14px;
+  min-height: 18px;
+}
+button:hover {
+  background: #357abd;
+}
