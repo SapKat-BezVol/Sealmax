@@ -1,149 +1,296 @@
-html, body {
-  height: 100%;
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f4f4f9;
+/* ====== БАЗА / ТЕМЫ ====== */
+:root{
+  --primary: #1a73e8;
+  --primary-hover:#1669c1;
+  --on-primary:#fff;
+
+  --bg:#f8f9fa;
+  --surface:#ffffff;
+  --text:#202124;
+  --muted:#5f6368;
+  --border:#e0e0e0;
+
+  --success:#34a853;
+  --error:#d93025;
+
+  --radius:12px;
+
+  --shadow-1: 0 1px 2px rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+  --shadow-2: 0 1px 3px rgba(60,64,67,.2), 0 4px 8px rgba(60,64,67,.15);
 }
-body {
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#121212;
+    --surface:#1e1f21;
+    --text:#e8eaed;
+    --muted:#bdc1c6;
+    --border:#2a2b2f;
+
+    --shadow-1: 0 1px 2px rgba(0,0,0,.6), 0 1px 3px 1px rgba(0,0,0,.5);
+    --shadow-2: 0 2px 6px rgba(0,0,0,.6), 0 6px 12px rgba(0,0,0,.5);
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+html { -webkit-text-size-adjust: 100%; }
+body{
+  margin: 0;
+  font-family: Roboto, system-ui, -apple-system, "Segoe UI", Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+  color: var(--text);
+  background: var(--bg);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
-#auth, #register {
-  margin: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 300px;
-  background: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+
+/* ====== УТИЛИТЫ ====== */
+.visually-hidden{
+  position:absolute !important; width:1px;height:1px;overflow:hidden;
+  clip:rect(1px,1px,1px,1px); white-space:nowrap; border:0; padding:0; margin:-1px;
 }
 
-.logo {
-  width: 100px;
-  margin: 0 auto 10px;
+/* ====== КАРТОЧКИ АВТОРИЗАЦИИ ====== */
+.card{
+  margin: auto;
+  width: min(420px, 92vw);
+  background: var(--surface);
+  padding: 24px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-2);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.logo{
+  width: 88px;
+  margin: 4px auto 6px;
   display: block;
 }
+.logo.small{ width: 28px; margin: 0; }
+.title{ margin: 0 0 6px; font-weight: 700; letter-spacing: .2px; }
 
-.logo.small {
-  width: 40px;
-  margin: 0;
+/* Поля ввода */
+.field{ display: grid; gap: 6px; }
+.field label{
+  font-size: 13px; color: var(--muted);
 }
-#app {
-  flex: 1;
+input, button, textarea { font: inherit; }
+input{
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+input::placeholder{ color: color-mix(in oklab, var(--muted) 70%, transparent); }
+input:focus{
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 25%, transparent);
+}
+input:disabled{ opacity: .6; }
+
+/* Кнопки */
+.btn{
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease, box-shadow .15s ease, transform .02s ease;
+  box-shadow: var(--shadow-1);
+}
+.btn:hover{ background: color-mix(in oklab, var(--surface) 85%, var(--text)); }
+.btn:active{ transform: translateY(1px); }
+.btn:disabled{ opacity: .6; cursor: not-allowed; }
+
+.btn.primary{
+  border-color: transparent;
+  background: var(--primary);
+  color: var(--on-primary);
+}
+.btn.primary:hover{ background: var(--primary-hover); }
+.btn.subtle{
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  color: var(--muted);
+}
+.btn.subtle:hover{ background: color-mix(in oklab, var(--surface) 90%, var(--text)); }
+
+.actions{ display: flex; gap: 10px; justify-content: flex-end; }
+
+.error{
+  min-height: 18px;
+  color: var(--error);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* ====== ПРИЛОЖЕНИЕ ====== */
+#app{
   display: none;
-  flex-direction: row;
+  flex: 1;
   height: 100%;
+  min-height: 0;
+  background: var(--bg);
 }
-#sidebar {
-  width: 200px;
-  background: #fafafa;
-  border-right: 1px solid #ddd;
+
+/* Лэйаут: сайдбар + чат */
+#sidebar{
+  width: clamp(220px, 26vw, 320px);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
+  min-width: 200px;
 }
-#contactSearch {
-  padding: 10px;
-  border: none;
-  border-bottom: 1px solid #ddd;
+.search{
+  position: sticky; top: 0; z-index: 5;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
 }
-#contacts {
+#contactSearch{
+  border: none; border-radius: 0;
+  width: 100%; padding: 14px 16px;
+  background: transparent;
+}
+#contactSearch:focus{ box-shadow: inset 0 -2px 0 var(--primary); }
+
+#contacts{
   flex: 1;
   overflow-y: auto;
   list-style: none;
-  margin: 0;
-  padding: 0;
+  margin: 0; padding: 0;
 }
-#contacts li {
-  padding: 10px;
+#contacts li{
+  padding: 12px 16px;
   cursor: pointer;
-  border-bottom: 1px solid #eee;
-  display: flex;
-  justify-content: space-between;
+  border-bottom: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+  display: grid;
+  grid-template-columns: 1fr auto;
   align-items: center;
+  gap: 8px;
+  transition: background .12s ease;
 }
-#contacts li.active {
-  background: #e0f7fa;
+#contacts li:hover{ background: color-mix(in oklab, var(--surface) 92%, var(--text)); }
+#contacts li.active{ background: color-mix(in oklab, var(--primary) 12%, transparent); }
+#contacts li span:first-child{
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.badge {
-  background: red;
+.badge{
+  background: #ea4335;
   color: #fff;
-  border-radius: 50%;
-  padding: 2px 6px;
+  border-radius: 999px;
+  padding: 2px 8px;
   font-size: 12px;
+  line-height: 18px;
+  box-shadow: var(--shadow-1);
 }
-#chatArea {
+
+/* Чат */
+#chatArea{
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-width: 0;
   min-height: 0;
 }
-#chatHeader {
-  padding: 10px;
-  background: #4a90e2;
-  color: #fff;
+#chatHeader{
+  padding: 12px 16px;
+  background: var(--surface);
+  color: var(--text);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 10;
+}
+#chatTitle{
+  display: flex; align-items: center; gap: 10px;
+  font-weight: 500;
 }
 
-#chatTitle {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-#messages {
+#messages{
   flex: 1;
   overflow-y: auto;
   list-style: none;
   margin: 0;
-  padding: 10px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
+  background:
+    radial-gradient(1200px 800px at 100% -50%, color-mix(in oklab, var(--primary) 6%, transparent), transparent),
+    var(--bg);
 }
-#messages li {
-  max-width: 60%;
-  padding: 8px 12px;
-  border-radius: 12px;
+#messages li{
+  max-width: min(66%, 720px);
+  padding: 10px 14px;
+  border-radius: 16px;
   word-break: break-word;
+  box-shadow: var(--shadow-1);
+  line-height: 1.35;
 }
-#messages li.mine {
-  background: #dcf8c6;
+#messages li.mine{
+  background: color-mix(in oklab, var(--primary) 16%, var(--surface));
+  color: var(--text);
   align-self: flex-end;
+  border-bottom-right-radius: 4px;
 }
-#messages li.theirs {
-  background: #fff;
+#messages li.theirs{
+  background: var(--surface);
   align-self: flex-start;
+  border-bottom-left-radius: 4px;
 }
-#form {
+
+/* Форма отправки */
+#form{
   display: flex;
-  padding: 10px;
-  background: #eee;
+  gap: 10px;
+  padding: 12px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  position: sticky; bottom: 0;
 }
-#form input {
+#form input{
   flex: 1;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  padding: 12px 14px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--surface) 92%, var(--text));
+  border: 1px solid var(--border);
 }
-#form button {
-  margin-left: 10px;
-  padding: 10px 20px;
-  border: none;
-  background: #4a90e2;
-  color: #fff;
-  border-radius: 4px;
-  cursor: pointer;
+#form input:focus{
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 25%, transparent);
 }
-.error {
-  color: #e53935;
-  text-align: center;
-  font-size: 14px;
-  min-height: 18px;
+#form button{
+  border-radius: 999px;
+  padding-inline: 18px;
 }
-button:hover {
-  background: #357abd;
+
+/* Адаптив */
+@media (max-width: 920px){
+  #sidebar{ width: 240px; }
+}
+@media (max-width: 720px){
+  #sidebar{ display:none; }
+  #messages li{ max-width: 85%; }
+}
+
+/* Скролл */
+#contacts::-webkit-scrollbar,
+#messages::-webkit-scrollbar { width: 10px; }
+#contacts::-webkit-scrollbar-thumb,
+#messages::-webkit-scrollbar-thumb{
+  background: color-mix(in oklab, var(--text) 20%, transparent);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
