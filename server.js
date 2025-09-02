@@ -45,22 +45,37 @@ app.post('/api/register', (req, res) => {
   if (!username || !password || !customId) {
     return res.status(400).json({ error: 'missing fields' });
   }
+  const name = username.trim();
+  const nameNorm = name.toLowerCase();
   const idNorm = customId.toLowerCase();
   if (!/^[a-z][a-z0-9]{4,}$/.test(idNorm)) {
     return res.status(400).json({ error: 'invalid customId' });
   }
+  const existing = db
+    .prepare('SELECT 1 FROM users WHERE LOWER(username) = ? OR customId = ?')
+    .get(nameNorm, idNorm);
+  if (existing) {
+    return res.status(400).json({ error: 'user exists' });
+  }
   try {
     const hash = bcrypt.hashSync(password, 10);
-    const info = db.prepare('INSERT INTO users (username, password, customId) VALUES (?, ?, ?)').run(username, hash, idNorm);
-    res.json({ id: info.lastInsertRowid, username, customId: idNorm });
-  } catch (e) {
-    res.status(400).json({ error: 'user exists' });
+    const info = db
+      .prepare('INSERT INTO users (username, password, customId) VALUES (?, ?, ?)')
+      .run(name, hash, idNorm);
+    res.json({ id: info.lastInsertRowid, username: name, customId: idNorm });
+  } catch {
+    res.status(500).json({ error: 'registration failed' });
   }
 });
 
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
-  const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
+  if (!username || !password) {
+    return res.status(400).json({ error: 'missing fields' });
+  }
+  const user = db
+    .prepare('SELECT * FROM users WHERE LOWER(username) = ?')
+    .get(username.toLowerCase());
   if (!user || !bcrypt.compareSync(password, user.password)) {
     return res.status(401).json({ error: 'invalid credentials' });
   }

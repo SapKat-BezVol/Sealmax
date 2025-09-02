@@ -85,3 +85,27 @@ test('contacts list only shows chatted users', done => {
       });
     });
 });
+
+test('rejects duplicate usernames', async () => {
+  const agent = request.agent(httpServer);
+  await agent
+    .post('/api/register')
+    .send({ username: 'dup', password: 'p', customId: 'alphadup' });
+  const res = await agent
+    .post('/api/register')
+    .send({ username: 'DuP', password: 'p2', customId: 'alphadup2' });
+  expect(res.statusCode).toBe(400);
+  expect(JSON.parse(res.text).error).toBe('user exists');
+});
+
+test('login is case insensitive', async () => {
+  const agent = request.agent(httpServer);
+  await agent
+    .post('/api/register')
+    .send({ username: 'CaseUser', password: 'pass', customId: 'alpha8' });
+  const res = await agent
+    .post('/api/login')
+    .send({ username: 'caseuser', password: 'pass' });
+  expect(res.statusCode).toBe(200);
+  expect(res.body.username).toBe('CaseUser');
+});
