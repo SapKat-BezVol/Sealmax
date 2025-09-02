@@ -1,52 +1,95 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <link rel="icon" href="logo.png">
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#1a73e8" />
+  <link rel="icon" href="logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
   <title>Sealmax Messenger</title>
   <script src="/socket.io/socket.io.js"></script>
   <script src="client.js" defer></script>
 </head>
 <body>
-  <div id="auth">
-    <img src="logo.png" alt="Sealmax logo" class="logo">
-    <h2>Sign in</h2>
-    <input id="loginUser" placeholder="Username" />
-    <input id="loginPass" type="password" placeholder="Password" />
-    <div id="loginError" class="error"></div>
-    <button id="loginBtn">Login</button>
-    <button id="showRegister">Register</button>
-  </div>
-  <div id="register" style="display:none;">
-    <img src="logo.png" alt="Sealmax logo" class="logo">
-    <h2>Register</h2>
-    <input id="regUser" placeholder="Username" />
-    <input id="regCustom" placeholder="Custom ID" />
-    <input id="regPass" type="password" placeholder="Password" />
-    <div id="regError" class="error"></div>
-    <button id="regBtn">Create account</button>
-    <button id="showLogin">Back</button>
-  </div>
-  <div id="app">
-    <div id="sidebar">
-      <input id="contactSearch" placeholder="@id" />
-      <ul id="contacts"></ul>
+  <!-- Авторизация -->
+  <div id="auth" class="card" role="dialog" aria-labelledby="authTitle" aria-modal="true">
+    <img src="logo.png" alt="Sealmax logo" class="logo" />
+    <h2 id="authTitle" class="title">Вход</h2>
+
+    <div class="field">
+      <label for="loginUser">Имя пользователя</label>
+      <input id="loginUser" placeholder="username" autocomplete="username" required />
     </div>
-    <div id="chatArea">
-      <div id="chatHeader">
+
+    <div class="field">
+      <label for="loginPass">Пароль</label>
+      <input id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password" required />
+    </div>
+
+    <div id="loginError" class="error" role="alert" aria-live="polite"></div>
+
+    <div class="actions">
+      <button id="loginBtn" class="btn primary">Войти</button>
+      <button id="showRegister" class="btn">Регистрация</button>
+    </div>
+  </div>
+
+  <!-- Регистрация -->
+  <div id="register" class="card" style="display:none;" role="dialog" aria-labelledby="regTitle" aria-modal="true">
+    <img src="logo.png" alt="Sealmax logo" class="logo" />
+    <h2 id="regTitle" class="title">Регистрация</h2>
+
+    <div class="field">
+      <label for="regUser">Имя пользователя</label>
+      <input id="regUser" placeholder="username" autocomplete="username" required />
+    </div>
+
+    <div class="field">
+      <label for="regCustom">Кастомный ID</label>
+      <input id="regCustom" placeholder="@custom_id" inputmode="latin" pattern="^[a-z0-9_]{3,20}$" title="3–20 символов, латиница, цифры и подчёркивание" />
+    </div>
+
+    <div class="field">
+      <label for="regPass">Пароль</label>
+      <input id="regPass" type="password" placeholder="минимум 8 символов" autocomplete="new-password" minlength="8" required />
+    </div>
+
+    <div id="regError" class="error" role="alert" aria-live="polite"></div>
+
+    <div class="actions">
+      <button id="regBtn" class="btn primary">Создать аккаунт</button>
+      <button id="showLogin" class="btn">Назад</button>
+    </div>
+  </div>
+
+  <!-- Приложение -->
+  <div id="app">
+    <aside id="sidebar" aria-label="Контакты">
+      <div class="search">
+        <input id="contactSearch" placeholder="@id" aria-label="Поиск по кастомному ID (@id)" />
+      </div>
+      <ul id="contacts" role="listbox" aria-label="Список контактов"></ul>
+    </aside>
+
+    <main id="chatArea" aria-live="polite" aria-busy="false">
+      <header id="chatHeader">
         <div id="chatTitle">
-          <img src="logo.png" alt="Sealmax logo" class="logo small">
+          <img src="logo.png" alt="Sealmax logo" class="logo small" />
           <span id="chatWith">General</span>
         </div>
-        <button id="logoutBtn">Logout</button>
-      </div>
-      <ul id="messages"></ul>
-      <form id="form" autocomplete="off">
-        <input id="input" placeholder="Type a message" />
-        <button>Send</button>
+        <button id="logoutBtn" class="btn subtle">Выйти</button>
+      </header>
+
+      <ul id="messages" aria-label="Сообщения"></ul>
+
+      <form id="form" autocomplete="off" aria-label="Отправка сообщения">
+        <input id="input" placeholder="Напишите сообщение…" aria-label="Поле ввода сообщения" />
+        <button class="btn primary" aria-label="Отправить">Отправить</button>
       </form>
-    </div>
+    </main>
   </div>
 </body>
 </html>
