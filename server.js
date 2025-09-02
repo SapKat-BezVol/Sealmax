@@ -10,8 +10,7 @@ const db = new Database('data.sqlite');
 db.prepare(`CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   username TEXT UNIQUE,
-  password TEXT,
-  customId TEXT UNIQUE
+  password TEXT
 )`).run();
 db.prepare(`CREATE TABLE IF NOT EXISTS messages (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -41,28 +40,24 @@ function requireAuth(req, res, next) {
 }
 
 app.post('/api/register', (req, res) => {
-  const { username, password, customId } = req.body;
-  if (!username || !password || !customId) {
+  const { username, password } = req.body;
+  if (!username || !password) {
     return res.status(400).json({ error: 'missing fields' });
   }
   const name = username.trim();
   const nameNorm = name.toLowerCase();
-  const idNorm = customId.toLowerCase();
-  if (!/^[a-z][a-z0-9]{4,}$/.test(idNorm)) {
-    return res.status(400).json({ error: 'invalid customId' });
-  }
   const existing = db
-    .prepare('SELECT 1 FROM users WHERE LOWER(username) = ? OR customId = ?')
-    .get(nameNorm, idNorm);
+    .prepare('SELECT 1 FROM users WHERE LOWER(username) = ?')
+    .get(nameNorm);
   if (existing) {
     return res.status(400).json({ error: 'user exists' });
   }
   try {
     const hash = bcrypt.hashSync(password, 10);
     const info = db
-      .prepare('INSERT INTO users (username, password, customId) VALUES (?, ?, ?)')
-      .run(name, hash, idNorm);
-    res.json({ id: info.lastInsertRowid, username: name, customId: idNorm });
+      .prepare('INSERT INTO users (username, password) VALUES (?, ?)')
+      .run(name, hash);
+    res.json({ id: info.lastInsertRowid, username: name });
   } catch {
     res.status(500).json({ error: 'registration failed' });
   }
@@ -80,7 +75,7 @@ app.post('/api/login', (req, res) => {
     return res.status(401).json({ error: 'invalid credentials' });
   }
   req.session.userId = user.id;
-  res.json({ id: user.id, username: user.username, customId: user.customId });
+  res.json({ id: user.id, username: user.username });
 });
 
 app.post('/api/logout', (req, res) => {
@@ -93,26 +88,26 @@ app.get('/api/me', (req, res) => {
   if (!req.session.userId) {
     return res.json({ id: null });
   }
-  const user = db.prepare('SELECT id, username, customId FROM users WHERE id = ?').get(req.session.userId);
+  const user = db.prepare('SELECT id, username FROM users WHERE id = ?').get(req.session.userId);
   res.json(user);
 });
 
 app.get('/api/users', requireAuth, (req, res) => {
-  const users = db.prepare('SELECT id, username, customId FROM users WHERE id != ?').all(req.session.userId);
+  const users = db.prepare('SELECT id, username FROM users WHERE id != ?').all(req.session.userId);
   res.json(users);
 });
 
 app.get('/api/users/:id', requireAuth, (req, res) => {
-  const user = db.prepare('SELECT id, username, customId FROM users WHERE id = ?').get(req.params.id);
+  const user = db.prepare('SELECT id, username FROM users WHERE id = ?').get(req.params.id);
   if (!user) {
     return res.status(404).json({ error: 'not found' });
   }
   res.json(user);
 });
 
-app.get('/api/custom/:customId', requireAuth, (req, res) => {
-  const idNorm = req.params.customId.toLowerCase();
-  const user = db.prepare('SELECT id, username, customId FROM users WHERE customId = ?').get(idNorm);
+app.get('/api/user/:username', requireAuth, (req, res) => {
+  const nameNorm = req.params.username.toLowerCase();
+  const user = db.prepare('SELECT id, username FROM users WHERE LOWER(username) = ?').get(nameNorm);
   if (!user) {
     return res.status(404).json({ error: 'not found' });
   }
@@ -121,7 +116,7 @@ app.get('/api/custom/:customId', requireAuth, (req, res) => {
 
 app.get('/api/contacts', requireAuth, (req, res) => {
   const list = db.prepare(`
-    SELECT DISTINCT u.id, u.username, u.customId
+    SELECT DISTINCT u.id, u.username
     FROM users u
     JOIN messages m ON (m.senderId = u.id AND m.recipientId = ?) OR (m.recipientId = u.id AND m.senderId = ?)
     WHERE u.id != ?

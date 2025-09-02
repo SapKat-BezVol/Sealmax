@@ -1,5 +1,8 @@
+const fs = require('fs');
+const path = require('path');
 const request = require('supertest');
 const { io } = require('socket.io-client');
+try { fs.unlinkSync(path.join(__dirname, '..', 'data.sqlite')); } catch {}
 const server = require('../server');
 
 let httpServer;
@@ -15,17 +18,17 @@ afterAll(done => {
 test('serves login page', async () => {
   const res = await request(httpServer).get('/');
   expect(res.statusCode).toBe(200);
-  expect(res.text).toContain('Sign in');
+  expect(res.text).toContain('Вход');
 });
 
 test('register, login and chat', done => {
   const agent = request.agent(httpServer);
   agent
     .post('/api/register')
-    .send({ username: 'u1', password: 'p1', customId: 'alpha1' })
+    .send({ username: 'u1', password: 'p1' })
     .then(() => agent.post('/api/login').send({ username: 'u1', password: 'p1' }))
     .then(res => {
-      expect(res.body.customId).toBe('alpha1');
+      expect(res.body.username).toBe('u1');
       const cookie = res.headers['set-cookie'][0];
       const client = io('http://localhost:3000', { extraHeaders: { Cookie: cookie } });
       client.on('chat history', () => {
@@ -38,28 +41,27 @@ test('register, login and chat', done => {
       });
     });
 });
-
-test('rejects invalid custom id', async () => {
-  const res = await request(httpServer)
-    .post('/api/register')
-    .send({ username: 'u2', password: 'p2', customId: '1bad' });
-  expect(res.statusCode).toBe(400);
+test('fetch user by username', async () => {
+  const agent = request.agent(httpServer);
+  await agent.post('/api/register').send({ username: 'u3', password: 'p3' });
+  await agent.post('/api/login').send({ username: 'u3', password: 'p3' });
+  const res = await agent.get('/api/user/u3');
+  expect(res.body.username).toBe('u3');
 });
 
-test('fetch user by custom id', async () => {
-  const agent = request.agent(httpServer);
-  await agent.post('/api/register').send({ username: 'u3', password: 'p3', customId: 'alpha3' });
-  await agent.post('/api/login').send({ username: 'u3', password: 'p3' });
-  const res = await agent.get('/api/custom/alpha3');
-  expect(res.body.username).toBe('u3');
+test('rejects registration with missing fields', async () => {
+  const res = await request(httpServer)
+    .post('/api/register')
+    .send({ username: '', password: '' });
+  expect(res.statusCode).toBe(400);
 });
 
 test('contacts list only shows chatted users', done => {
   const agent1 = request.agent(httpServer);
   const agent2 = request.agent(httpServer);
   Promise.all([
-    agent1.post('/api/register').send({ username: 'u4', password: 'p4', customId: 'alpha4' }),
-    agent2.post('/api/register').send({ username: 'u5', password: 'p5', customId: 'alpha5' })
+    agent1.post('/api/register').send({ username: 'u4', password: 'p4' }),
+    agent2.post('/api/register').send({ username: 'u5', password: 'p5' })
   ])
     .then(() => Promise.all([
       agent1.post('/api/login').send({ username: 'u4', password: 'p4' }),
@@ -90,10 +92,10 @@ test('rejects duplicate usernames', async () => {
   const agent = request.agent(httpServer);
   await agent
     .post('/api/register')
-    .send({ username: 'dup', password: 'p', customId: 'alphadup' });
+    .send({ username: 'dup', password: 'p' });
   const res = await agent
     .post('/api/register')
-    .send({ username: 'DuP', password: 'p2', customId: 'alphadup2' });
+    .send({ username: 'DuP', password: 'p2' });
   expect(res.statusCode).toBe(400);
   expect(JSON.parse(res.text).error).toBe('user exists');
 });
@@ -102,7 +104,7 @@ test('login is case insensitive', async () => {
   const agent = request.agent(httpServer);
   await agent
     .post('/api/register')
-    .send({ username: 'CaseUser', password: 'pass', customId: 'alpha8' });
+    .send({ username: 'CaseUser', password: 'pass' });
   const res = await agent
     .post('/api/login')
     .send({ username: 'caseuser', password: 'pass' });
