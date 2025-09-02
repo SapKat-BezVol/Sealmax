@@ -14,7 +14,6 @@ const loginError = document.getElementById('loginError');
 const loginBtn = document.getElementById('loginBtn');
 const showRegister = document.getElementById('showRegister');
 const regUser = document.getElementById('regUser');
-const regCustom = document.getElementById('regCustom');
 const regPass = document.getElementById('regPass');
 const regError = document.getElementById('regError');
 const regBtn = document.getElementById('regBtn');
@@ -27,6 +26,7 @@ const form = document.getElementById('form');
 const input = document.getElementById('input');
 const chatWith = document.getElementById('chatWith');
 const logoutBtn = document.getElementById('logoutBtn');
+const themeBtn = document.getElementById('themeBtn');
 
 let socket;
 let me = null;
@@ -52,7 +52,7 @@ function renderContacts() {
     if (u.id === activeId) li.classList.add('active');
 
     const name = document.createElement('span');
-    name.textContent = u.username + (u.customId ? ` (@${u.customId})` : '');
+    name.textContent = u.username;
     li.appendChild(name);
 
     const count = unread.get(u.id);
@@ -88,8 +88,8 @@ function renderMessage(m) {
   li.className = m.senderId === me.id ? 'mine' : 'theirs';
   let prefix = '';
   if (m.recipientId === 0) {
-    const sender = m.senderId === me.id ? 'Me' : contacts.get(m.senderId)?.username || `@${m.senderId}`;
-    prefix = sender + ': ';
+    const sender = m.senderId === me.id ? 'Me' : contacts.get(m.senderId)?.username;
+    if (sender) prefix = sender + ': ';
   }
   li.textContent = prefix + m.text;
   messagesUl.appendChild(li);
@@ -97,7 +97,7 @@ function renderMessage(m) {
 
 function selectContact(id) {
   activeId = id;
-  chatWith.textContent = id === 0 ? 'General' : contacts.get(id)?.username || `@${id}`;
+  chatWith.textContent = id === 0 ? 'General' : contacts.get(id)?.username || '';
   unread.set(id, 0);
   renderContacts();
   loadMessages(id);
@@ -154,7 +154,7 @@ regBtn.onclick = async () => {
   setBusy(regBtn, true);
   registerBox.setAttribute('aria-busy', 'true');
   try {
-    await api('/api/register', 'POST', { username: regUser.value.trim(), password: regPass.value, customId: regCustom.value.trim() });
+    await api('/api/register', 'POST', { username: regUser.value.trim(), password: regPass.value });
     registerBox.style.display = 'none';
     authBox.style.display = 'flex';
     clearAndFocus(loginUser);
@@ -169,7 +169,7 @@ regBtn.onclick = async () => {
 };
 
 /* Enter для регистрации */
-[regUser, regCustom, regPass].forEach(el => {
+[regUser, regPass].forEach(el => {
   el.addEventListener('keydown', ev => {
     if (ev.key === 'Enter') regBtn.click();
   });
@@ -235,16 +235,16 @@ form.addEventListener('submit', e => {
   input.focus();
 });
 
-/* Поиск по Enter: @handle */
+/* Поиск по Enter: username */
 contactSearch.addEventListener('keydown', async e => {
   if (e.key === 'Enter') {
     const v = contactSearch.value.trim();
     if (!v) return;
-    const handle = v.startsWith('@') ? v.slice(1).toLowerCase() : v.toLowerCase();
+    const name = v.startsWith('@') ? v.slice(1).toLowerCase() : v.toLowerCase();
     contactSearch.value = '';
-    if (handle && ![...contacts.values()].some(u => u.customId === handle)) {
+    if (name && ![...contacts.values()].some(u => u.username.toLowerCase() === name)) {
       try {
-        const u = await api(`/api/custom/${handle}`);
+        const u = await api(`/api/user/${name}`);
         contacts.set(u.id, u);
         renderContacts();
       } catch {/* молча */}
@@ -252,9 +252,23 @@ contactSearch.addEventListener('keydown', async e => {
   }
 });
 
+function applyTheme() {
+  const dark = localStorage.getItem('theme') === 'dark';
+  document.documentElement.classList.toggle('dark', dark);
+  themeBtn.textContent = dark ? 'Светлая тема' : 'Тёмная тема';
+}
+
+themeBtn.onclick = () => {
+  const dark = !document.documentElement.classList.contains('dark');
+  document.documentElement.classList.toggle('dark', dark);
+  localStorage.setItem('theme', dark ? 'dark' : 'light');
+  themeBtn.textContent = dark ? 'Светлая тема' : 'Тёмная тема';
+};
+
 logoutBtn.onclick = async () => {
   await api('/api/logout', 'POST');
   location.reload();
 };
 
+applyTheme();
 init();

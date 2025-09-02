@@ -48,11 +48,6 @@
     </div>
 
     <div class="field">
-      <label for="regCustom">Кастомный ID</label>
-      <input id="regCustom" placeholder="@custom_id" inputmode="latin" pattern="^[a-z0-9_]{3,20}$" title="3–20 символов, латиница, цифры и подчёркивание" />
-    </div>
-
-    <div class="field">
       <label for="regPass">Пароль</label>
       <input id="regPass" type="password" placeholder="минимум 8 символов" autocomplete="new-password" minlength="8" required />
     </div>
@@ -69,7 +64,7 @@
   <div id="app">
     <aside id="sidebar" aria-label="Контакты">
       <div class="search">
-        <input id="contactSearch" placeholder="@id" aria-label="Поиск по кастомному ID (@id)" />
+        <input id="contactSearch" placeholder="username" aria-label="Поиск по логину" />
       </div>
       <ul id="contacts" role="listbox" aria-label="Список контактов"></ul>
     </aside>
@@ -80,7 +75,10 @@
           <img src="logo.png" alt="Sealmax logo" class="logo small" />
           <span id="chatWith">General</span>
         </div>
-        <button id="logoutBtn" class="btn subtle">Выйти</button>
+        <div class="header-buttons">
+          <button id="themeBtn" class="btn subtle">Тема</button>
+          <button id="logoutBtn" class="btn subtle">Выйти</button>
+        </div>
       </header>
 
       <ul id="messages" aria-label="Сообщения"></ul>
