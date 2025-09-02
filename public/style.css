@@ -20,6 +20,17 @@ body {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
+
+.logo {
+  width: 100px;
+  margin: 0 auto 10px;
+  display: block;
+}
+
+.logo.small {
+  width: 40px;
+  margin: 0;
+}
 #app {
   flex: 1;
   display: none;
@@ -76,6 +87,12 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+#chatTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 #messages {
   flex: 1;
